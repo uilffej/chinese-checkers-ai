@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chinese Checkers — Bot</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Chinese Checkers</h1>
+      <div class="controls">
+        <button id="newGame">New Game</button>
+        <button id="undoBtn">Undo</button>
+
+        <!-- Reliable help -->
+        <div class="helpGroup">
+          <button id="hintMyBest" title="Show the best move for you (Master strength)">My Best Move</button>
+          <button id="hintBotNext" title="Show what the bot would play (current level)">Bot’s Next Move</button>
+          <button id="hintClear" title="Clear any shown hints">Clear</button>
+        </div>
+
+        <label class="sliderLabel">
+          AI time per move
+          <input type="range" id="timeSlider" min="300" max="4000" value="1800" step="100">
+          <span id="timeLabel">1.8s</span>
+        </label>
+
+        <!-- Existing search profile -->
+        <label class="selectLabel">
+          Search profile
+          <select id="styleSelect">
+            <option value="solid">Solid (safe)</option>
+            <option value="greedy">Greedy (fast)</option>
+            <option value="deep">Deep (stronger)</option>
+          </select>
+        </label>
+
+        <!-- NEW: Difficulty levels -->
+        <label class="selectLabel">
+          Difficulty
+          <select id="levelSelect">
+            <option value="1">Beginner</option>
+            <option value="2">Casual</option>
+            <option value="3" selected>Intermediate</option>
+            <option value="4">Advanced</option>
+            <option value="5">Master</option>
+          </select>
+          <span id="eloLabel" class="elo">≈ 1400</span>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <canvas id="board" aria-label="Chinese Checkers board" role="img"></canvas>
+      <aside id="log"></aside>
+    </main>
+
+    <footer>
+      <p>You are <b>blue</b> at the <b>bottom</b>. AI is <b>red</b> at the top. Click a piece, then a highlighted hole.</p>
+    </footer>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>
