@@ -15,7 +15,6 @@
         <button id="newGame">New Game</button>
         <button id="undoBtn">Undo</button>
 
-        <!-- Reliable help -->
         <div class="helpGroup">
           <button id="hintMyBest" title="Show the best move for you (Master strength)">My Best Move</button>
           <button id="hintBotNext" title="Show what the bot would play (current level)">Bot’s Next Move</button>
@@ -28,17 +27,15 @@
           <span id="timeLabel">1.8s</span>
         </label>
 
-        <!-- Existing search profile -->
         <label class="selectLabel">
           Search profile
           <select id="styleSelect">
-            <option value="solid">Solid (safe)</option>
+            <option value="solid" selected>Solid (safe)</option>
             <option value="greedy">Greedy (fast)</option>
             <option value="deep">Deep (stronger)</option>
           </select>
         </label>
 
-        <!-- NEW: Difficulty levels -->
         <label class="selectLabel">
           Difficulty
           <select id="levelSelect">
@@ -50,6 +47,15 @@
           </select>
           <span id="eloLabel" class="elo">≈ 1400</span>
         </label>
+
+        <!-- New: theme picker -->
+        <label class="selectLabel">
+          Theme
+          <select id="themeSelect">
+            <option value="dark" selected>Dark</option>
+            <option value="wood">Wood</option>
+          </select>
+        </label>
       </div>
     </header>
 
@@ -59,7 +65,7 @@
     </main>
 
     <footer>
-      <p>You are <b>blue</b> at the <b>bottom</b>. AI is <b>red</b> at the top. Click a piece, then a highlighted hole.</p>
+      <p>You are <b>blue</b> at the <b>bottom</b>. AI is <b>red</b> at the top. Click a piece to see moves; click the <b>same piece again</b> to clear highlights.</p>
     </footer>
   </div>
   <script src="main.js"></script>

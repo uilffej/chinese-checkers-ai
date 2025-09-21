@@ -8,12 +8,8 @@ const timeSlider = document.getElementById("timeSlider");
 const timeLabel = document.getElementById("timeLabel");
 const styleSelect = document.getElementById("styleSelect");
 const levelSelect = document.getElementById("levelSelect");
+const themeSelect = document.getElementById("themeSelect");
 const eloLabel = document.getElementById("eloLabel");
-
-if (styleSelect && !Array.from(styleSelect.options).some(o=>o.value==="wood")) {
-  const opt = document.createElement("option");
-  opt.value = "wood"; opt.textContent = "Wood"; styleSelect.appendChild(opt);
-}
 
 const btnMyBest  = document.getElementById("hintMyBest");
 const btnBotNext = document.getElementById("hintBotNext");
@@ -95,8 +91,9 @@ const STATE = {
   history: [],
   settings: {
     botMs: parseInt(timeSlider?.value||"1800",10),
-    style: styleSelect?.value || "solid",
-    level: parseInt(levelSelect?.value||"3",10)
+    style: styleSelect?.value || "solid",     // search profile
+    level: parseInt(levelSelect?.value||"3",10),
+    theme: themeSelect?.value || "dark"       // new: visual theme
   },
   layout: { scale:1, shiftX:0, shiftY:0, pickR2:225, pegR:12, holeR:10 },
   hints: { me: null, bot: null },
@@ -106,6 +103,7 @@ updateEloBadge();
 
 styleSelect?.addEventListener("change",()=>{ STATE.settings.style = styleSelect.value; draw(); });
 timeSlider?.addEventListener("change",()=> STATE.settings.botMs = parseInt(timeSlider.value,10));
+themeSelect?.addEventListener("change",()=>{ STATE.settings.theme = themeSelect.value; draw(); });
 
 // ---------------- Setup ----------------
 function setupNewGame(){
@@ -245,13 +243,24 @@ function pickCell(px,py){
   }
   return best;
 }
+
+// New: chess.com-like deselect — click the same piece again to clear highlights
 canvas?.addEventListener("click", (evt)=>{
   const rect = canvas.getBoundingClientRect();
   const hit = pickCell(evt.clientX-rect.left, evt.clientY-rect.top);
   if(hit==null || STATE.turn!==1) return;
 
+  // if something is already selected and user clicks it again -> deselect
+  if(STATE.selected!=null && hit===STATE.selected){
+    STATE.selected=null; STATE.legal=[]; draw();
+    return;
+  }
+
   if(STATE.selected==null){
-    if(STATE.board[hit]===1){ STATE.selected=hit; STATE.legal=legalMovesFor(STATE.board,1,hit); }
+    if(STATE.board[hit]===1){
+      STATE.selected=hit;
+      STATE.legal=legalMovesFor(STATE.board,1,hit);
+    }
   }else{
     const m = STATE.legal.find(mm=>mm.to===hit);
     if(m && isLegalMove(STATE.board,1,m)){
@@ -259,13 +268,24 @@ canvas?.addEventListener("click", (evt)=>{
       if(hasWon(1, STATE.board)){ log("<span class='badge'>You win 🎉</span>","human"); STATE.turn=0; draw(); return; }
       setTimeout(aiTurn, 20);
     }else if(STATE.board[hit]===1){
-      STATE.selected=hit; STATE.legal=legalMovesFor(STATE.board,1,hit);
+      // switch selection to a different own piece
+      STATE.selected=hit;
+      STATE.legal=legalMovesFor(STATE.board,1,hit);
     }else{
-      STATE.selected=null; STATE.legal=[]; log("Illegal move ignored.","human");
+      // clicked elsewhere (empty or opponent) -> just clear instead of logging noise
+      STATE.selected=null; STATE.legal=[]; 
     }
   }
   draw();
 });
+
+// Optional: quick keyboard “escape” to clear highlights
+document.addEventListener("keydown", (e)=>{
+  if(e.key==="Escape"){
+    STATE.selected=null; STATE.legal=[]; draw();
+  }
+});
+
 document.getElementById("newGame")?.addEventListener("click",()=>setupNewGame());
 document.getElementById("undoBtn")?.addEventListener("click",()=>{
   if(STATE.history.length>=2){
@@ -526,7 +546,6 @@ function chooseFromTopK(board, player, bestMove, k){
     if(cand.length>=k) break;
   }
   if(cand.length===0) return bestMove || null;
-  // ensure best is in list; if not, add it
   if(bestMove && !cand.some(m=>m.from===bestMove.from && m.to===bestMove.to)) cand.unshift(bestMove);
   return cand[Math.min(cand.length-1, Math.floor(Math.random()*k))];
 }
@@ -538,7 +557,6 @@ async function selectMoveForLevel(player){
   if(!bestMove) return null;
 
   if(L.topK>1){
-    // with probability pBest, play best; otherwise pick among next best up to topK
     if(Math.random() >= L.pBest){
       const alt = chooseFromTopK(STATE.board, player, bestMove, L.topK);
       if(alt && isLegalMove(STATE.board, player, alt)) return alt;
@@ -554,7 +572,6 @@ async function aiTurn(){
 
   let best = await selectMoveForLevel(2);
   if(!best || !isLegalMove(STATE.board,2,best)){
-    // fallback quick think
     const quick = { ...LEVELS[STATE.settings.level] };
     quick.timeScale = Math.min(1.0, quick.timeScale);
     const {bestMove} = searchRoot(cloneBoard(STATE.board), 2, timeForLevel(800, quick), STATE.settings.style, STATE.lastMove, quick);
@@ -582,7 +599,6 @@ function applyMove(m, isHuman){
   }
   const who = STATE.board[m.from];
   STATE.board[m.from]=0; STATE.board[m.to]=who;
-  // ensure lastMove stores full path for nice polyline
   m.path = m.path || [m.from, m.to];
   STATE.lastMove = m;
 
@@ -752,8 +768,10 @@ function drawLastMove(theme){
 function draw(){
   const W=canvas.clientWidth, H=canvas.clientHeight;
   ctx.clearRect(0,0,W,H);
-  const theme = STATE.settings.style==="wood" ? "wood" : "dark";
-  document.body && (document.body.dataset.theme = theme);
+
+  // pick theme from settings; keep old behavior if needed
+  const theme = STATE.settings.theme || "dark";
+  if (document.body) document.body.dataset.theme = theme;
 
   if(theme==="wood"){
     const b = pixelBounds();
