@@ -802,3 +802,4 @@ function draw(){
 // ---------------- Boot ----------------
 setupNewGame();
 resizeCanvas();
+//hello
